@@ -1,5 +1,7 @@
 # Library Artwork Repair for Stremio
 
+> **Advanced on-demand maintenance tool — not an addon, live metadata service or background process.**
+
 A bounded, cross-platform maintenance tool for **stale artwork already stored in Stremio LibraryItems**.
 
 This is intentionally separate from live metadata correction, Story Order and watched-state/Trakt reconciliation.
@@ -22,7 +24,7 @@ Plans and backups are written under `.private/`, which is excluded from Git.
 - No streaming/debrid work.
 - No silent writes.
 
-Live poster correction belongs to **Poster Safety**. Episode ordering belongs to **Story Order**. Watched-state reconciliation belongs to **Watch Sync & Repair** / Stremio Core.
+Live poster correction belongs to **Poster Safety**. Episode ordering belongs to **Story Order**. Watched-state reconciliation semantics belong to **Stremio Watch State Reference**, with permanent production ownership in Stremio Core/account integration.
 
 ## Requirements
 
@@ -32,18 +34,20 @@ Live poster correction belongs to **Poster Safety**. Episode ordering belongs to
 
 The tool does not persist the AuthKey.
 
+See [`SETUP.md`](SETUP.md) before using the CLI. It lists every documentation placeholder, what must replace it and which values are secrets. In particular, all `example.invalid` URLs are deliberately non-functional examples.
+
 ## Usage
 
 Read-only audit:
 
 ```text
-node src/cli.js audit --metadata-root https://example.invalid/stremio/config --auth-stdin
+node src/cli.js audit --metadata-root https://metadata.example.invalid/stremio/YOUR_CONFIG --ids tt1234567 --auth-stdin
 ```
 
 Create a private bounded plan:
 
 ```text
-node src/cli.js plan --metadata-root https://example.invalid/stremio/config --ids tt1234567,tt2345678 --max 10 --auth-stdin
+node src/cli.js plan --metadata-root https://metadata.example.invalid/stremio/YOUR_CONFIG --ids tt1234567,tt2345678 --max 10 --auth-stdin
 ```
 
 `--ids` is strongly preferred for real account maintenance so only the reviewed LibraryItems are queried and eligible to enter the plan.
