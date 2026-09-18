@@ -1,0 +1,13 @@
+{
+  "name": "stremio-library-artwork-repair",
+  "version": "1.0.0",
+  "private": false,
+  "type": "module",
+  "description": "Bounded cross-platform maintenance tool for stale Stremio LibraryItem artwork",
+  "license": "MIT",
+  "engines": {"node": ">=22.14.0"},
+  "scripts": {
+    "test": "node --test test/core.test.js",
+    "check": "node scripts/check.mjs"
+  }
+}

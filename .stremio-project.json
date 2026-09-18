@@ -1,0 +1,28 @@
+{
+  "foundationSchema": 1,
+  "id": "library-artwork-repair",
+  "name": "Library Artwork Repair for Stremio",
+  "classification": "maintenance-tool",
+  "status": "ACTIVE_PUBLIC_BOUNDED",
+  "domain": "stored-artwork-repair",
+  "crossPlatform": true,
+  "productionAuthority": "one-time bounded maintenance tool; no background authority",
+  "deviceDependency": "none",
+  "scope": [
+    "audit stale LibraryItem artwork",
+    "plan bounded artwork-only corrections",
+    "verified artwork-only writes with rollback backup"
+  ],
+  "forbiddenScope": [
+    "live metadata poster correction",
+    "watched-state sync",
+    "episode ordering",
+    "streaming",
+    "background scheduling"
+  ],
+  "releaseChannels": [
+    "github-source",
+    "github-release",
+    "local-bounded-execution"
+  ]
+}
