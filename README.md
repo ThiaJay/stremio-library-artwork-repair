@@ -8,7 +8,7 @@ The normal mode is now **automatic hosted maintenance**.
 
 A private Cloudflare Worker runs every 10 minutes. It does not require a PC, startup task, tray process or home server to remain online. Each invocation reads the shared Stremio library, chooses one deterministic 10-item batch and compares those items with the current Poster Safety metadata. With the current library size this rotates through the whole eligible library in roughly 24 hours.
 
-It can make at most **10 account writes per invocation**, matching the 10-item scan batch. Every item still receives its own account/concurrency checks, encrypted pre-write backup and verified readback. There is no public control endpoint.
+It can make at most **7 account writes per invocation** from the 10-item scan batch. Production qualification found that seven consecutive writes complete reliably while an eighth immediate write is rejected by the remote path, so the cap stops before that boundary. Every item still receives its own account/concurrency checks, encrypted pre-write backup and verified readback. There is no public control endpoint.
 
 The CLI remains available for administration and recovery; it is no longer the normal way artwork stays correct.
 
@@ -45,7 +45,7 @@ A run stops on the first uncertain mutation. Metadata failures for individual it
 ### Hard bounds
 
 - 10 metadata checks per scheduled batch.
-- 10 writes maximum per invocation, never more than the scanned batch size.
+- 7 writes maximum per invocation, below the 10-item scan batch and below the observed remote eighth-write failure boundary.
 - 20,000 LibraryItems maximum accepted from Stremio.
 - 500 explicit IDs maximum in the local CLI.
 - 6 MB metadata response limit.

@@ -13,7 +13,7 @@
   "normalMode": "automatic hosted scheduled maintenance",
   "cron": "*/10 * * * *",
   "scanBatchSize": 10,
-  "maxWritesPerRun": 10,
+  "maxWritesPerRun": 7,
   "publicProtocolSurface": "NONE",
   "hostedWorkerService": "stremio-library-artwork-maintenance",
   "metadataTransport": "internal Poster Safety service binding",

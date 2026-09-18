@@ -2,10 +2,10 @@
 
 ## 1.3.0 — 2026-09-18
 
-- Raises the scheduled write cap from 2 to 10 so one complete 10-item scan batch can converge in the same invocation instead of leaving known-stale items for the next daily rotation.
+- Raises the scheduled write cap from 2 to 7 after two production qualification runs proved seven consecutive verified writes and a consistent failure on the immediate eighth attempt.
 - Keeps every per-item account binding, second pre-write read, AES-256-GCM recovery backup, ambiguous-write handling and post-write readback unchanged.
-- The run still stops on the first uncertain mutation and can never write more items than it scanned.
-- With the current 1,432-item library, a fully stale backlog can now converge in roughly one 24-hour rotation rather than about five rotations.
+- The run still stops on the first uncertain mutation and the permanent cap now stops before the observed remote failure boundary.
+- With the current 1,432-item library, a fully stale 10-item batch can converge over at most two daily rotations instead of about five with the old cap.
 
 ## 1.2.1 — 2026-09-18
 

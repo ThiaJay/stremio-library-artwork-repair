@@ -115,7 +115,8 @@ test("poster policy preserves identity-bound decoration and rejects wrong identi
 });
 
 test("batch selector gives deterministic bounded coverage",()=>{
-  assert.equal(MAX_WRITES_PER_RUN,SCAN_BATCH_SIZE,"scheduled write cap must never exceed the scan batch");
+  assert.equal(MAX_WRITES_PER_RUN,7,"scheduled cap is bound to the proven remote safe ceiling");
+  assert.ok(MAX_WRITES_PER_RUN<=SCAN_BATCH_SIZE,"scheduled write cap must never exceed the scan batch");
   const rows=Array.from({length:43},(_,i)=>item("tt"+String(10000+i)));
   const seen=new Set();
   const count=Math.ceil(rows.length/SCAN_BATCH_SIZE);
