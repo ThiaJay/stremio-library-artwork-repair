@@ -1,7 +1,7 @@
 {
   "product": "Library Artwork Repair for Stremio",
-  "version": "1.2.1",
-  "status": "ACTIVE_PUBLIC_HOSTED",
+  "version": "1.3.0",
+  "status": "QUALIFIED_NOT_DEPLOYED",
   "classification": "hosted-maintenance",
   "deterministicTests": {
     "passed": 37,
@@ -13,10 +13,9 @@
   "normalMode": "automatic hosted scheduled maintenance",
   "cron": "*/10 * * * *",
   "scanBatchSize": 10,
-  "maxWritesPerRun": 2,
+  "maxWritesPerRun": 10,
   "publicProtocolSurface": "NONE",
   "hostedWorkerService": "stremio-library-artwork-maintenance",
-  "deployedWorkerVersion": "9cb788b3-163e-42f4-98bc-f6a14e205eb9",
   "metadataTransport": "internal Poster Safety service binding",
   "backupStore": "D1 encrypted pre-write backups",
   "backupRetentionDays": 14,
@@ -29,13 +28,8 @@
   "identityBoundDecoratedPosters": true,
   "explicitLibraryIdLimit": 500,
   "remoteScheduledProof": {
-    "eligible": 1432,
-    "scanned": 10,
-    "candidates": 10,
-    "attemptedWrites": 2,
-    "verifiedWrites": 2,
-    "stopped": false,
-    "errors": 0,
-    "encryptedBackups": 2
+    "pending": true,
+    "previousRelease": "v1.2.1",
+    "previousVerifiedWrites": 2
   }
 }

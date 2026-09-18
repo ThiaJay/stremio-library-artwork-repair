@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.3.0 — 2026-09-18
+
+- Raises the scheduled write cap from 2 to 10 so one complete 10-item scan batch can converge in the same invocation instead of leaving known-stale items for the next daily rotation.
+- Keeps every per-item account binding, second pre-write read, AES-256-GCM recovery backup, ambiguous-write handling and post-write readback unchanged.
+- The run still stops on the first uncertain mutation and can never write more items than it scanned.
+- With the current 1,432-item library, a fully stale backlog can now converge in roughly one 24-hour rotation rather than about five rotations.
+
 ## 1.2.1 — 2026-09-18
 
 - Corrects the Stremio API redirect policy for the Cloudflare Workers runtime: `redirect: manual` with explicit 3xx rejection instead of Node-only `redirect: error`.
