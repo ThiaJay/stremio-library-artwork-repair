@@ -1,10 +1,10 @@
 {
   "product": "Library Artwork Repair for Stremio",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "status": "ACTIVE_PUBLIC_BOUNDED",
   "classification": "maintenance-tool",
   "deterministicTests": {
-    "passed": 15,
+    "passed": 19,
     "failed": 0
   },
   "dependencyAudit": {
@@ -17,5 +17,8 @@
   "crossPlatform": true,
   "productionAuthority": "bounded one-time maintenance only",
   "identityBoundDecoratedPosters": true,
-  "boundedPostWriteReadbackRetries": 4
+  "boundedPostWriteReadbackRetries": 4,
+  "restoreSecondPreWriteRead": true,
+  "restoreBoundedStaleReadbackRetries": 4,
+  "explicitLibraryIdLimit": 500
 }

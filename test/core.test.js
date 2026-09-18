@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import {
   canonicalPoster, safePoster, decoratedPoster, safePosterForItem, validateSourceRoot, operationFor,
-  sameExceptArtworkAndMtime, recordHash, DEFAULT_IMAGE_HOSTS, applyOperation, createPlan
+  sameExceptArtworkAndMtime, recordHash, sha256, DEFAULT_IMAGE_HOSTS, applyOperation, restoreBackup, library, createPlan
 } from "../src/core.js";
 
 test("canonical RPDB-style proxy unwraps to trusted fallback",()=>{
@@ -129,5 +129,59 @@ test("apply operation tolerates one exact stale post-write readback then verifie
   const result=await applyOperation({authKey:"auth-key",account,operation:op,fetchImpl:f.fetchImpl});
   assert.equal(result.after.poster,nextPoster);
   assert.equal(sameExceptArtworkAndMtime(f.planned,result.after),true);
+  assert.equal(f.puts,1);
+});
+
+
+test("library ID boundary rejects malformed, duplicate and excessive explicit IDs before network access",async()=>{
+  const never=async()=>{throw new Error("network should not be reached")};
+  await assert.rejects(()=>library("auth-key",["bad"],never),e=>e?.code==="INVALID_LIBRARY_ID");
+  await assert.rejects(()=>library("auth-key",["tt12345","tt12345"],never),e=>e?.code==="DUPLICATE_LIBRARY_ID");
+  await assert.rejects(()=>library("auth-key",Array.from({length:501},(_,i)=>"tt"+String(10000+i)),never),e=>e?.code==="INVALID_LIBRARY_IDS");
+});
+
+function restoreFixture({changeOnConfirm=false,staleReadbacksAfterPut=0,driftAfterPut=false}={}){
+  const before={_id:"tt12345",name:"Example",type:"movie",poster:"https://images.metahub.space/poster/original",posterShape:"poster",removed:false,temp:false,_mtime:"1",state:{timeOffset:9,watched:"abc"},future:{x:1}};
+  const candidate={...structuredClone(before),poster:"https://image.tmdb.org/t/p/w500/decorated.jpg",_mtime:"2"};
+  let current=structuredClone(candidate),gets=0,puts=0,staleLeft=staleReadbacksAfterPut,prePut=null;
+  const fetchImpl=async(url,init={})=>{
+    const endpoint=String(url).split("/").pop(); const body=JSON.parse(init.body||"{}");
+    if(endpoint==="getUser") return Response.json({result:{_id:"account-1"}});
+    if(endpoint==="datastoreGet"){
+      gets++;
+      if(changeOnConfirm&&gets===2) current={...current,name:"Changed elsewhere",_mtime:"3"};
+      if(puts>0&&staleLeft>0){staleLeft--;return Response.json({result:[structuredClone(prePut)]});}
+      return Response.json({result:[structuredClone(current)]});
+    }
+    if(endpoint==="datastorePut"){
+      puts++;
+      prePut=structuredClone(current);
+      current=structuredClone(body.changes[0]);
+      if(driftAfterPut) current.state={...current.state,timeOffset:10};
+      return Response.json({result:true});
+    }
+    throw new Error("unexpected endpoint "+endpoint);
+  };
+  const account=sha256("stremio:account-1");
+  return {before,candidate,backup:{schema:1,account,before,candidate},fetchImpl,get puts(){return puts}};
+}
+
+test("restore performs a second immediate pre-write concurrency check",async()=>{
+  const f=restoreFixture({changeOnConfirm:true});
+  await assert.rejects(()=>restoreBackup({authKey:"auth-key",backup:f.backup,fetchImpl:f.fetchImpl}),e=>e?.code==="ITEM_CHANGED_SINCE_BACKUP");
+  assert.equal(f.puts,0);
+});
+
+test("restore tolerates one exact stale post-write readback and preserves unrelated state",async()=>{
+  const f=restoreFixture({staleReadbacksAfterPut:1});
+  const result=await restoreBackup({authKey:"auth-key",backup:f.backup,fetchImpl:f.fetchImpl});
+  assert.equal(result.poster,f.before.poster);
+  assert.equal(sameExceptArtworkAndMtime(f.before,result),true);
+  assert.equal(f.puts,1);
+});
+
+test("restore rejects unrelated post-write drift",async()=>{
+  const f=restoreFixture({driftAfterPut:true});
+  await assert.rejects(()=>restoreBackup({authKey:"auth-key",backup:f.backup,fetchImpl:f.fetchImpl}),e=>e?.code==="UNEXPECTED_STATE_CHANGE");
   assert.equal(f.puts,1);
 });

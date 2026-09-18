@@ -48,3 +48,7 @@ If you provide a URL ending in `/manifest.json`, the tool removes that suffix au
 6. Keep the generated `.private/` backup until you have independently verified the result.
 
 Nothing in this guide is a live credential, account ID or private service URL.
+
+## Restore concurrency safety
+
+Restore uses the same concurrency discipline as apply: account binding, current-candidate verification, a second immediate pre-write read, one write and post-write readback. A bounded retry is allowed only when Stremio returns the exact stale pre-restore record; any unrelated drift fails closed.

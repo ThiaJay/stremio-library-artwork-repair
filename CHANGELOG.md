@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.1.1 — 2026-09-18
+
+- Gives restore/rollback the same second-pre-write concurrency check as apply.
+- Adds bounded exact-stale readback handling after restore while rejecting unrelated drift immediately.
+- Validates explicit LibraryItem ID lists before network access: max 500, IMDb format only, no duplicates.
+- Adds Linux, Windows and macOS CI with dependency audit.
+
 ## 1.1.0 — 2026-09-18
 
 - Preserves AIOMetadata decorated rating/quality/age posters when the wrapper media type and IMDb ID exactly match the LibraryItem and the canonical fallback is safe.

@@ -4,6 +4,8 @@
 
 A bounded, cross-platform maintenance tool for **stale artwork already stored in Stremio LibraryItems**.
 
+**v1.1.1** hardens rollback symmetry and explicit-library-ID boundaries without expanding the tool's scope.
+
 This is intentionally separate from live metadata correction, Story Order and watched-state/Trakt reconciliation.
 
 ## What it does
@@ -11,7 +13,7 @@ This is intentionally separate from live metadata correction, Story Order and wa
 1. **audit** — reads the Stremio library and the selected metadata source and reports artwork candidates. No writes. Identity-bound AIOMetadata decorated posters are preserved so rating, quality and age badges are not discarded.
 2. **plan** — creates a private, bounded plan containing the exact before-state hash for each candidate. No writes.
 3. **apply** — requires `--ack-account-write`, verifies the same Stremio account and exact unchanged LibraryItem immediately before each write, writes only the poster field, reads it back and stops if any unrelated field changed.
-4. **restore** — requires the same acknowledgement, verifies that the item still matches the applied candidate and restores the private backup.
+4. **restore** — requires the same acknowledgement, verifies that the item still matches the applied candidate, performs a second immediate pre-write read, restores the private backup and verifies the result with bounded exact-stale readback handling.
 
 Plans and backups are written under `.private/`, which is excluded from Git.
 

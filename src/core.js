@@ -137,6 +137,13 @@ export async function accountFingerprint(authKey, fetchImpl = fetch) {
 }
 
 export async function library(authKey, ids = [], fetchImpl = fetch) {
+  assert(Array.isArray(ids) && ids.length <= 500, "INVALID_LIBRARY_IDS");
+  const seen = new Set();
+  for (const id of ids) {
+    assert(typeof id === "string" && /^tt\d{5,12}$/.test(id), "INVALID_LIBRARY_ID");
+    assert(!seen.has(id), "DUPLICATE_LIBRARY_ID");
+    seen.add(id);
+  }
   const result = await stremioCall(authKey, "datastoreGet", {
     collection: "libraryItem",
     ids,
@@ -240,18 +247,37 @@ export async function applyOperation({authKey, account, operation, allowedHosts 
 
 export async function restoreBackup({authKey, backup, fetchImpl = fetch}) {
   assert(backup?.schema === 1 && backup?.account && backup?.before && backup?.candidate, "BACKUP_INVALID");
+  assert(typeof backup.before._id === "string" && /^tt\d{5,12}$/.test(backup.before._id), "BACKUP_INVALID");
+  assert(backup.before._id === backup.candidate._id && backup.before.type === backup.candidate.type, "BACKUP_INVALID");
   assert(await accountFingerprint(authKey, fetchImpl) === backup.account, "ACCOUNT_CHANGED");
   const rows = await library(authKey, [backup.before._id], fetchImpl);
   assert(rows.length === 1, "STREMIO_ITEM_MISSING");
   const current = rows[0];
   assert(current.poster === backup.candidate.poster, "ARTWORK_CHANGED_SINCE_BACKUP");
   assert(sameExceptArtworkAndMtime(backup.candidate, current), "ITEM_CHANGED_SINCE_BACKUP");
+
+  const confirmRows = await library(authKey, [backup.before._id], fetchImpl);
+  assert(confirmRows.length === 1 && recordHash(confirmRows[0]) === recordHash(current), "ITEM_CHANGED_SINCE_BACKUP");
+
   const restored = structuredClone(backup.before);
   restored._mtime = new Date().toISOString();
   const put = await stremioCall(authKey, "datastorePut", {collection: "libraryItem", changes: [restored]}, fetchImpl);
   assert(put === true || put?.success === true, "STREMIO_WRITE_NOT_CONFIRMED");
-  const after = (await library(authKey, [backup.before._id], fetchImpl))[0];
-  assert(after.poster === backup.before.poster, "RESTORE_READBACK_MISMATCH");
+
+  let after = null;
+  for (let attempt = 0; attempt < 4; attempt++) {
+    const afterRows = await library(authKey, [backup.before._id], fetchImpl);
+    assert(afterRows.length === 1, "WRITE_READBACK_MISSING");
+    after = afterRows[0];
+    if (after.poster === backup.before.poster && sameExceptArtworkAndMtime(backup.before, after)) break;
+    const isExactStaleCurrent = recordHash(after) === recordHash(current);
+    if (!isExactStaleCurrent) {
+      if (!sameExceptArtworkAndMtime(backup.before, after)) throw new RepairError("UNEXPECTED_STATE_CHANGE");
+      throw new RepairError("RESTORE_READBACK_MISMATCH");
+    }
+    if (attempt < 3) await new Promise(resolve => setTimeout(resolve, 150 * (2 ** attempt)));
+  }
+  assert(after?.poster === backup.before.poster, "RESTORE_READBACK_MISMATCH");
   assert(sameExceptArtworkAndMtime(backup.before, after), "UNEXPECTED_STATE_CHANGE");
   return after;
 }
