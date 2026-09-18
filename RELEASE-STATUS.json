@@ -1,7 +1,7 @@
 {
   "product": "Library Artwork Repair for Stremio",
   "version": "1.3.0",
-  "status": "QUALIFIED_NOT_DEPLOYED",
+  "status": "ACTIVE_PUBLIC_HOSTED",
   "classification": "hosted-maintenance",
   "deterministicTests": {
     "passed": 37,
@@ -28,8 +28,34 @@
   "identityBoundDecoratedPosters": true,
   "explicitLibraryIdLimit": 500,
   "remoteScheduledProof": {
-    "pending": true,
-    "previousRelease": "v1.2.1",
-    "previousVerifiedWrites": 2
+    "workerVersion": "7e9e2b95-0544-44c7-92ac-f2595b035a35",
+    "scheduledTime": 1789765215000,
+    "eligible": 1432,
+    "scanned": 10,
+    "candidates": 10,
+    "attemptedWrites": 7,
+    "verifiedWrites": 7,
+    "stopped": false,
+    "errors": 0,
+    "encryptedBackupsObserved": 55,
+    "workerOutcome": "ok"
+  },
+  "deployedWorkerVersion": "7e9e2b95-0544-44c7-92ac-f2595b035a35",
+  "sourceRuntimeCommit": "a33134295911f2c7499f62760fd7b00c898cc8ea",
+  "crossPlatformCI": {
+    "run": "https://github.com/ThiaJay/stremio-library-artwork-repair/actions/runs/35393800170",
+    "platforms": [
+      "linux",
+      "windows",
+      "macos"
+    ],
+    "result": "PASS"
+  },
+  "throughputQualification": {
+    "attemptedCap10Runs": 2,
+    "eachVerifiedBeforeStop": 7,
+    "observedFailureAttempt": 8,
+    "selectedProductionCap": 7,
+    "rationale": "stop below the repeatedly observed eighth-attempt boundary while preserving all per-item safety checks"
   }
 }
