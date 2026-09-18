@@ -34,6 +34,8 @@ The metadata source must:
 - not point to localhost, a private/local hostname or an IP literal;
 - expose normal Stremio `/meta/<type>/<id>.json` responses below the supplied root.
 
+If the metadata response uses an AIOMetadata decorated/rating poster, the tool keeps it only when the wrapper path carries the exact same media type and IMDb ID as the LibraryItem and its `fallback=` is an allowed safe canonical image. A mismatched or unsafe decorated wrapper is not accepted as a write candidate.
+
 If you provide a URL ending in `/manifest.json`, the tool removes that suffix automatically.
 
 ## First run

@@ -8,7 +8,7 @@ This is intentionally separate from live metadata correction, Story Order and wa
 
 ## What it does
 
-1. **audit** — reads the Stremio library and the selected metadata source and reports artwork candidates. No writes.
+1. **audit** — reads the Stremio library and the selected metadata source and reports artwork candidates. No writes. Identity-bound AIOMetadata decorated posters are preserved so rating, quality and age badges are not discarded.
 2. **plan** — creates a private, bounded plan containing the exact before-state hash for each candidate. No writes.
 3. **apply** — requires `--ack-account-write`, verifies the same Stremio account and exact unchanged LibraryItem immediately before each write, writes only the poster field, reads it back and stops if any unrelated field changed.
 4. **restore** — requires the same acknowledgement, verifies that the item still matches the applied candidate and restores the private backup.
@@ -68,7 +68,7 @@ node src/cli.js restore .private/backup-....json --ack-account-write --auth-stdi
 
 The write path is deliberately one-item-at-a-time and fail-closed. It binds every proposed change to the account fingerprint and SHA-256 of the complete LibraryItem, re-reads immediately before writing, permits only an HTTPS allowlisted poster, stores the original item first, verifies the write by readback and rejects any unrelated state change.
 
-The default image-host allowlist is deliberately narrow: TMDB, TVDB artwork and MetaHub. Additional hosts require an explicit `--image-hosts` argument.
+The default canonical-image allowlist is deliberately narrow: TMDB, TVDB artwork and MetaHub. AIOMetadata decorated poster wrappers are accepted separately only when the wrapper host matches the AIOMetadata service pattern, its media type and IMDb ID exactly match the LibraryItem and its `fallback=` points to a safe canonical image. The wrapper host therefore does not need to be added to `--image-hosts`.
 
 ## Cross-platform
 

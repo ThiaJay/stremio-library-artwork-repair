@@ -1,6 +1,6 @@
 {
   "name": "stremio-library-artwork-repair",
-  "version": "1.0.1",
+  "version": "1.1.0",
   "private": false,
   "type": "module",
   "description": "Bounded cross-platform maintenance tool for stale Stremio LibraryItem artwork",

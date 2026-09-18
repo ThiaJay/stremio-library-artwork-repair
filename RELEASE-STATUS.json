@@ -1,19 +1,21 @@
-﻿{
-    "product":  "Library Artwork Repair for Stremio",
-    "version":  "1.0.1",
-    "status":  "ACTIVE_PUBLIC_BOUNDED",
-    "classification":  "maintenance-tool",
-    "deterministicTests":  {
-                               "passed":  10,
-                               "failed":  0
-                           },
-    "dependencyAudit":  {
-                            "vulnerabilities":  0
-                        },
-    "defaultMode":  "read-only",
-    "accountWriteGate":  "--ack-account-write",
-    "secondPreWriteRead":  true,
-    "autorun":  false,
-    "crossPlatform":  true,
-    "productionAuthority":  "bounded one-time maintenance only"
+{
+  "product": "Library Artwork Repair for Stremio",
+  "version": "1.1.0",
+  "status": "ACTIVE_PUBLIC_BOUNDED",
+  "classification": "maintenance-tool",
+  "deterministicTests": {
+    "passed": 15,
+    "failed": 0
+  },
+  "dependencyAudit": {
+    "vulnerabilities": 0
+  },
+  "defaultMode": "read-only",
+  "accountWriteGate": "--ack-account-write",
+  "secondPreWriteRead": true,
+  "autorun": false,
+  "crossPlatform": true,
+  "productionAuthority": "bounded one-time maintenance only",
+  "identityBoundDecoratedPosters": true,
+  "boundedPostWriteReadbackRetries": 4
 }
