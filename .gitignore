@@ -3,3 +3,5 @@ node_modules/
 .private/*
 !.private/.gitkeep
 .development/
+wrangler.local.toml
+.wrangler/

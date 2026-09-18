@@ -1,77 +1,109 @@
 # Library Artwork Repair for Stremio
 
-> **Advanced on-demand maintenance tool — not an addon, live metadata service or background process.**
+Automatic, cross-platform maintenance for **artwork already persisted in Stremio LibraryItems**, with a separate local CLI for audit, explicit repair and recovery.
 
-A bounded, cross-platform maintenance tool for **stale artwork already stored in Stremio LibraryItems**.
+## Normal operating mode
 
-**v1.1.1** hardens rollback symmetry and explicit-library-ID boundaries without expanding the tool's scope.
+The normal mode is now **automatic hosted maintenance**.
 
-This is intentionally separate from live metadata correction, Story Order and watched-state/Trakt reconciliation.
+A private Cloudflare Worker runs every 10 minutes. It does not require a PC, startup task, tray process or home server to remain online. Each invocation reads the shared Stremio library, chooses one deterministic 10-item batch and compares those items with the current Poster Safety metadata. With the current library size this rotates through the whole eligible library in roughly 24 hours.
 
-## What it does
+It can make at most **2 account writes per invocation**. There is no public control endpoint.
 
-1. **audit** — reads the Stremio library and the selected metadata source and reports artwork candidates. No writes. Identity-bound AIOMetadata decorated posters are preserved so rating, quality and age badges are not discarded.
-2. **plan** — creates a private, bounded plan containing the exact before-state hash for each candidate. No writes.
-3. **apply** — requires `--ack-account-write`, verifies the same Stremio account and exact unchanged LibraryItem immediately before each write, writes only the poster field, reads it back and stops if any unrelated field changed.
-4. **restore** — requires the same acknowledgement, verifies that the item still matches the applied candidate, performs a second immediate pre-write read, restores the private backup and verifies the result with bounded exact-stale readback handling.
+The CLI remains available for administration and recovery; it is no longer the normal way artwork stays correct.
 
-Plans and backups are written under `.private/`, which is excluded from Git.
+## Separation of responsibility
 
-## What it does not do
+This project owns **stored LibraryItem artwork**.
 
-- No autorun, scheduler, service or daemon.
-- No watched/unwatched or Trakt changes.
-- No episode ordering.
-- No live metadata proxying.
-- No streaming/debrid work.
-- No silent writes.
+- **Poster Safety** prevents/repairs bad poster fields in live metadata.
+- **Library Artwork Repair** automatically reconciles artwork already saved in the Stremio account.
+- **Story Order** owns episode/special ordering.
+- **Stremio Watch State Reference** owns watched-state semantics.
 
-Live poster correction belongs to **Poster Safety**. Episode ordering belongs to **Story Order**. Watched-state reconciliation semantics belong to **Stremio Watch State Reference**, with permanent production ownership in Stremio Core/account integration.
+The two artwork layers are complementary, not duplicates: prevention does not guarantee that previously persisted artwork changes automatically.
 
-## Requirements
+## Automatic safety model
 
-- Node.js 22.14 or newer.
-- A Stremio AuthKey supplied only for the current run through `STREMIO_AUTHKEY` or `--auth-stdin`.
-- An HTTPS Stremio metadata root supplied with `--metadata-root` or `METADATA_ROOT`.
+Every scheduled run is bounded and fail-closed:
 
-The tool does not persist the AuthKey.
+1. Verify the Stremio credential still belongs to the expected account fingerprint.
+2. Read the current library and select one deterministic batch of at most 20 eligible IMDb-backed movie/series items.
+3. Read current metadata through the **internal Poster Safety service binding**.
+4. Require exact media type and IMDb identity.
+5. Preserve a decorated AIOMetadata poster only when the wrapper identity matches and its canonical fallback is safe.
+6. Build a candidate only when the current stored poster differs.
+7. Re-read the exact LibraryItem and bind the operation to a hash of the complete record.
+8. Re-read immediately again before any write.
+9. Encrypt the complete pre-write record with AES-256-GCM and persist it to a private D1 backup database. If backup persistence fails, **do not write**.
+10. Write one LibraryItem.
+11. Read it back and prove that only artwork plus Stremio's modification timestamp changed.
+12. Treat ambiguous writes by readback: if the desired state already committed, accept it; if the exact old state remains, one retry is allowed; any other state fails closed.
 
-See [`SETUP.md`](SETUP.md) before using the CLI. It lists every documentation placeholder, what must replace it and which values are secrets. In particular, all `example.invalid` URLs are deliberately non-functional examples.
+A run stops on the first uncertain mutation. Metadata failures for individual items are skipped rather than turning missing information into a destructive decision.
 
-## Usage
+### Hard bounds
 
-Read-only audit:
+- 10 metadata checks per scheduled batch.
+- 2 writes maximum per invocation.
+- 20,000 LibraryItems maximum accepted from Stremio.
+- 500 explicit IDs maximum in the local CLI.
+- 6 MB metadata response limit.
+- 12 MB Stremio response limit.
+- 14-day encrypted hosted-backup retention.
+- No public Worker endpoint.
+- No watched/progress mutation.
+
+## Hosted privacy/security
+
+The hosted service stores these only as Cloudflare secrets:
+
+- `STREMIO_AUTHKEY`
+- `EXPECTED_ACCOUNT_FINGERPRINT`
+- `BACKUP_ENCRYPTION_KEY`
+
+The production D1 database ID lives only in the ignored local Wrangler config. Hosted backups are encrypted before being written to D1. Backup keys use a truncated hash of the IMDb ID rather than the title or raw ID.
+
+The Worker logs aggregate counts and error codes only. It does not log the AuthKey, account ID, titles, poster URLs, private metadata routes or backup plaintext.
+
+`workers_dev = false`, so the scheduled maintenance Worker has no public Workers.dev URL.
+
+## Local admin/recovery CLI
+
+The original CLI remains for explicit audit, plan/apply and restore operations:
 
 ```text
 node src/cli.js audit --metadata-root https://metadata.example.invalid/stremio/YOUR_CONFIG --ids tt1234567 --auth-stdin
-```
-
-Create a private bounded plan:
-
-```text
-node src/cli.js plan --metadata-root https://metadata.example.invalid/stremio/YOUR_CONFIG --ids tt1234567,tt2345678 --max 10 --auth-stdin
-```
-
-`--ids` is strongly preferred for real account maintenance so only the reviewed LibraryItems are queried and eligible to enter the plan.
-
-Apply an already-reviewed plan:
-
-```text
+node src/cli.js plan --metadata-root https://metadata.example.invalid/stremio/YOUR_CONFIG --ids tt1234567 --max 10 --auth-stdin
 node src/cli.js apply .private/plan-....json --ack-account-write --auth-stdin
-```
-
-Restore one verified backup:
-
-```text
 node src/cli.js restore .private/backup-....json --ack-account-write --auth-stdin
 ```
 
-## Safety model
+Hosted encrypted backups can be listed/exported for recovery:
 
-The write path is deliberately one-item-at-a-time and fail-closed. It binds every proposed change to the account fingerprint and SHA-256 of the complete LibraryItem, re-reads immediately before writing, permits only an HTTPS allowlisted poster, stores the original item first, verifies the write by readback and rejects any unrelated state change.
+```text
+npm run hosted-backups -- list
+npm run hosted-backups -- export <kv-backup-key>
+```
 
-The default canonical-image allowlist is deliberately narrow: TMDB, TVDB artwork and MetaHub. AIOMetadata decorated poster wrappers are accepted separately only when the wrapper host matches the AIOMetadata service pattern, its media type and IMDb ID exactly match the LibraryItem and its `fallback=` points to a safe canonical image. The wrapper host therefore does not need to be added to `--image-hosts`.
+The export is decrypted only into `.private/`, then can be passed to the existing `restore` command. Hosted schema-2 backups and local schema-1 backups share the same guarded restore path.
+
+## Self-hosting
+
+Start with [`SETUP.md`](SETUP.md) and `wrangler.example.toml`.
+
+The public template contains placeholders only. Production resource IDs, account identifiers, configured metadata URLs and credentials must remain outside Git.
+
+## Tests
+
+```text
+npm test
+npm run check
+npm audit --omit=dev
+```
+
+The suite covers both the local/manual engine and the scheduled hosted engine, including concurrency, encrypted backup gating, ambiguous writes, stale readback, wrong-account protection, batch coverage, hard write limits, metadata identity and public-surface closure.
 
 ## Cross-platform
 
-The implementation is standard Node.js with no OS-specific runtime dependency. It can run on Windows, macOS or Linux. It is a one-time maintenance tool, not permanent product infrastructure.
+The persistent authority is the hosted Worker plus the Stremio account, so normal operation is device-independent. The admin CLI is standard Node.js and remains tested on Linux, Windows and macOS.

@@ -1,54 +1,71 @@
 # Setup and placeholder guide
 
-This is an advanced, on-demand maintenance tool. It is not a Stremio addon and nothing runs automatically.
+The normal operating mode is automatic hosted maintenance. The local CLI remains for explicit administration and recovery.
 
-## Values you must supply
+## Hosted deployment
 
-| Documentation value | Replace with | How to obtain it | Secret? |
-| --- | --- | --- | --- |
-| `https://metadata.example.invalid/stremio/YOUR_CONFIG` | Your real HTTPS Stremio metadata addon root or manifest URL | Use the configured metadata addon's own manifest URL. The tool accepts either the base path or the same URL ending in `/manifest.json`. | The URL may contain private configuration identifiers. Treat it as private unless you know it is public. |
-| `tt1234567,tt2345678` | The IMDb IDs of the exact LibraryItems you reviewed | Copy the IMDb IDs for the movie/series you intend to audit or repair. | No |
-| `STREMIO_AUTHKEY` | A valid Stremio AuthKey for the account being maintained | Supply an AuthKey you already obtained through a legitimate Stremio account/session flow. This repository does not contain, discover or publish one for you. | **Yes** |
+Copy `wrangler.example.toml` to `wrangler.local.toml`. The local file is ignored by Git.
 
-The `.invalid` hostname is deliberately non-routable. Commands containing it are examples only and will not work until you replace it.
+Required resources and secrets:
 
-## Safest way to supply the AuthKey
+| Value/binding | Purpose | Privacy |
+| --- | --- | --- |
+| `BACKUP_DB` | Dedicated D1 database containing encrypted pre-write backups | Keep the production database ID outside Git |
+| `POSTER_SAFETY` | Internal service binding to Poster Safety | Internal Cloudflare topology |
+| `STREMIO_AUTHKEY` | Stremio account credential | **Secret** |
+| `EXPECTED_ACCOUNT_FINGERPRINT` | SHA-256 binding to the intended Stremio account | **Account-specific secret** |
+| `BACKUP_ENCRYPTION_KEY` | Random 32-byte base64url AES-256 key | **Secret** |
 
-Prefer `--auth-stdin`. The tool prompts on standard input and does not persist the key.
+The secrets must be installed with Wrangler secret bindings, never ordinary `[vars]`, source files, screenshots or release notes.
+
+The production cron is `*/10 * * * *`. The Worker uses `workers_dev = false`, so there is no public Worker URL.
+
+## Capacity model
+
+Each run deterministically selects 10 eligible items and can write at most 2. With about 1,400 eligible items, the current library is revisited roughly once per day. The scan is stateless; there is no cursor database that can become a single point of failure.
+
+Encrypted recovery records are stored in D1 because D1's free allowance is materially larger than Workers KV's write allowance. The service does not use KV.
+
+## Backup recovery
+
+Hosted backups are encrypted before storage and expire logically after 14 days; scheduled pruning removes expired rows.
+
+List recovery records:
 
 ```text
-node src/cli.js audit --metadata-root https://metadata.example.invalid/stremio/YOUR_CONFIG --ids tt1234567 --auth-stdin
+npm run hosted-backups -- list
 ```
 
-Replace the metadata URL and IMDb ID before running that command.
+Export and decrypt one into `.private/`:
 
-For automation, `STREMIO_AUTHKEY` is also supported as an environment variable. Do not put the AuthKey in source files, Git commits, screenshots, issue reports, release notes or command examples.
+```text
+npm run hosted-backups -- export <backup-key>
+```
 
-## Metadata root rules
+Then pass the exported file to the existing guarded restore path:
 
-The metadata source must:
+```text
+node src/cli.js restore .private/hosted-backup-....json --ack-account-write --auth-stdin
+```
 
-- use HTTPS;
-- use the standard HTTPS port;
-- contain no embedded username/password, query string or fragment;
-- not point to localhost, a private/local hostname or an IP literal;
-- expose normal Stremio `/meta/<type>/<id>.json` responses below the supplied root.
+Restore rechecks the account, current candidate state, immediate concurrency and post-write readback.
 
-If the metadata response uses an AIOMetadata decorated/rating poster, the tool keeps it only when the wrapper path carries the exact same media type and IMDb ID as the LibraryItem and its `fallback=` is an allowed safe canonical image. A mismatched or unsafe decorated wrapper is not accepted as a write candidate.
+## Local CLI placeholders
 
-If you provide a URL ending in `/manifest.json`, the tool removes that suffix automatically.
+| Documentation value | Replace with | Secret? |
+| --- | --- | --- |
+| `https://metadata.example.invalid/stremio/YOUR_CONFIG` | Real HTTPS metadata root/manifest used for a deliberate local audit | The real URL may contain private configuration |
+| `tt1234567,tt2345678` | Exact IMDb IDs being deliberately inspected | No |
+| `STREMIO_AUTHKEY` | Valid Stremio AuthKey supplied for the current local run | **Yes** |
 
-## First run
+`.invalid` is deliberately non-routable. Example commands require substitution.
 
-1. Start with `audit`; it is read-only.
-2. Use `--ids` to bound the exact reviewed items.
-3. Inspect the proposed `from` and `to` poster URLs.
-4. Only create a plan once the audit is correct.
-5. Only run `apply` after reviewing that saved plan; account writes additionally require `--ack-account-write`.
-6. Keep the generated `.private/` backup until you have independently verified the result.
+## Never publish
 
-Nothing in this guide is a live credential, account ID or private service URL.
-
-## Restore concurrency safety
-
-Restore uses the same concurrency discipline as apply: account binding, current-candidate verification, a second immediate pre-write read, one write and post-write readback. A bounded retry is allowed only when Stremio returns the exact stale pre-restore record; any unrelated drift fails closed.
+- `wrangler.local.toml`
+- `.private/*`
+- AuthKeys
+- account fingerprints
+- backup encryption keys
+- production D1 IDs
+- personal configured metadata URLs

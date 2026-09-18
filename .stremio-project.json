@@ -2,27 +2,29 @@
   "foundationSchema": 1,
   "id": "library-artwork-repair",
   "name": "Library Artwork Repair for Stremio",
-  "classification": "maintenance-tool",
-  "status": "ACTIVE_PUBLIC_BOUNDED",
+  "classification": "hosted-maintenance",
+  "status": "ACTIVE_PUBLIC_HOSTED",
   "domain": "stored-artwork-repair",
   "crossPlatform": true,
-  "productionAuthority": "one-time bounded maintenance tool; no background authority",
+  "productionAuthority": "private hosted scheduled maintenance service with local admin/recovery CLI",
   "deviceDependency": "none",
   "scope": [
-    "audit stale LibraryItem artwork",
-    "plan bounded artwork-only corrections",
-    "verified artwork-only writes with rollback backup"
+    "automatic scheduled audit of persisted LibraryItem artwork",
+    "bounded identity-verified artwork-only corrections",
+    "encrypted pre-write hosted backups with verified readback",
+    "local audit, explicit repair and recovery administration"
   ],
   "forbiddenScope": [
     "live metadata poster correction",
     "watched-state sync",
     "episode ordering",
     "streaming",
-    "background scheduling"
+    "public account-maintenance control surface"
   ],
   "releaseChannels": [
     "github-source",
     "github-release",
-    "local-bounded-execution"
+    "private-scheduled-service",
+    "local-admin-recovery"
   ]
 }

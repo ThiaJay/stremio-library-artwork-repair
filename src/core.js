@@ -246,7 +246,7 @@ export async function applyOperation({authKey, account, operation, allowedHosts 
 }
 
 export async function restoreBackup({authKey, backup, fetchImpl = fetch}) {
-  assert(backup?.schema === 1 && backup?.account && backup?.before && backup?.candidate, "BACKUP_INVALID");
+  assert([1,2].includes(backup?.schema) && backup?.account && backup?.before && backup?.candidate, "BACKUP_INVALID");
   assert(typeof backup.before._id === "string" && /^tt\d{5,12}$/.test(backup.before._id), "BACKUP_INVALID");
   assert(backup.before._id === backup.candidate._id && backup.before.type === backup.candidate.type, "BACKUP_INVALID");
   assert(await accountFingerprint(authKey, fetchImpl) === backup.account, "ACCOUNT_CHANGED");

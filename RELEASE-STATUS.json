@@ -1,24 +1,31 @@
 {
   "product": "Library Artwork Repair for Stremio",
-  "version": "1.1.1",
-  "status": "ACTIVE_PUBLIC_BOUNDED",
-  "classification": "maintenance-tool",
+  "version": "1.2.0",
+  "status": "ACTIVE_PUBLIC_HOSTED",
+  "classification": "hosted-maintenance",
   "deterministicTests": {
-    "passed": 19,
+    "passed": 36,
     "failed": 0
   },
   "dependencyAudit": {
     "vulnerabilities": 0
   },
-  "defaultMode": "read-only",
-  "accountWriteGate": "--ack-account-write",
+  "normalMode": "automatic hosted scheduled maintenance",
+  "cron": "*/10 * * * *",
+  "scanBatchSize": 10,
+  "maxWritesPerRun": 2,
+  "publicProtocolSurface": "NONE",
+  "hostedWorkerService": "stremio-library-artwork-maintenance",
+  "deployedWorkerVersion": "c0b1c554-5344-4b06-ac81-348fe5cf4525",
+  "metadataTransport": "internal Poster Safety service binding",
+  "backupStore": "D1 encrypted pre-write backups",
+  "backupRetentionDays": 14,
+  "backupEncryption": "AES-256-GCM",
+  "accountFingerprintBound": true,
   "secondPreWriteRead": true,
-  "autorun": false,
+  "ambiguousWriteReadbackResolution": true,
+  "localCliRole": "admin/recovery only",
   "crossPlatform": true,
-  "productionAuthority": "bounded one-time maintenance only",
   "identityBoundDecoratedPosters": true,
-  "boundedPostWriteReadbackRetries": 4,
-  "restoreSecondPreWriteRead": true,
-  "restoreBoundedStaleReadbackRetries": 4,
   "explicitLibraryIdLimit": 500
 }

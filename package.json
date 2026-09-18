@@ -1,15 +1,20 @@
 {
   "name": "stremio-library-artwork-repair",
-  "version": "1.1.1",
+  "version": "1.2.0",
   "private": false,
   "type": "module",
-  "description": "Bounded cross-platform maintenance tool for stale Stremio LibraryItem artwork",
+  "description": "Cross-platform automatic hosted maintenance plus admin/recovery tooling for stale Stremio LibraryItem artwork",
   "license": "MIT",
   "engines": {
     "node": ">=22.14.0"
   },
   "scripts": {
-    "test": "node --test test/core.test.js",
-    "check": "node scripts/check.mjs"
+    "test": "node --test test/core.test.js test/worker.test.js",
+    "check": "node scripts/check.mjs",
+    "deploy": "wrangler deploy --config wrangler.local.toml",
+    "hosted-backups": "node scripts/hosted-backups.mjs"
+  },
+  "devDependencies": {
+    "wrangler": "4.134.0"
   }
 }

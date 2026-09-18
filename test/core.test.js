@@ -180,6 +180,14 @@ test("restore tolerates one exact stale post-write readback and preserves unrela
   assert.equal(f.puts,1);
 });
 
+test("restore accepts hosted schema-2 backup format",async()=>{
+  const f=restoreFixture();
+  f.backup.schema=2;
+  const result=await restoreBackup({authKey:"auth-key",backup:f.backup,fetchImpl:f.fetchImpl});
+  assert.equal(result.poster,f.before.poster);
+  assert.equal(sameExceptArtworkAndMtime(f.before,result),true);
+});
+
 test("restore rejects unrelated post-write drift",async()=>{
   const f=restoreFixture({driftAfterPut:true});
   await assert.rejects(()=>restoreBackup({authKey:"auth-key",backup:f.backup,fetchImpl:f.fetchImpl}),e=>e?.code==="UNEXPECTED_STATE_CHANGE");

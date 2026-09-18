@@ -1,0 +1,16 @@
+name = "stremio-library-artwork-maintenance"
+main = "src/worker.js"
+compatibility_date = "2026-09-18"
+workers_dev = false
+
+[triggers]
+crons = ["*/10 * * * *"]
+
+[[services]]
+binding = "POSTER_SAFETY"
+service = "stremio-poster-safety"
+
+[[d1_databases]]
+binding = "BACKUP_DB"
+database_name = "stremio-library-artwork-maintenance"
+database_id = "<your backup D1 database id>"
