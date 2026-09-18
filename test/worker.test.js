@@ -303,3 +303,19 @@ test("run heartbeat stores aggregate-only state",async()=>{
   assert.equal(db.state[8],0);
   assert.equal(db.state[9],"[]");
 });
+
+
+test("Stremio API redirects are rejected without follow",async()=>{
+  let calls=0;
+  const fetchImpl=async(_url,init)=>{
+    calls++;
+    assert.equal(init.redirect,"manual");
+    return new Response(null,{status:302,headers:{location:"https://evil.example/"}});
+  };
+  const env={
+    STREMIO_AUTHKEY:"auth-key-value",EXPECTED_ACCOUNT_FINGERPRINT:"0".repeat(64),
+    BACKUP_ENCRYPTION_KEY:"A".repeat(43),BACKUP_DB:new MemoryDB(),POSTER_SAFETY:posterBinding({})
+  };
+  await assert.rejects(()=>runMaintenance(env,0,{fetchImpl,sleep:async()=>{}}),e=>e?.code==="STREMIO_HTTP_302");
+  assert.equal(calls,1);
+});

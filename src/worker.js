@@ -109,7 +109,7 @@ async function stremioRead(env,endpoint,args={},deps={}){
     try{
       const response=await fetchImpl(`${STREMIO_API}/${endpoint}`,{
         method:"POST",headers:{"content-type":"application/json"},
-        body:JSON.stringify({...args,authKey:env.STREMIO_AUTHKEY}),redirect:"error",signal:AbortSignal.timeout(15000)
+        body:JSON.stringify({...args,authKey:env.STREMIO_AUTHKEY}),redirect:"manual",signal:AbortSignal.timeout(15000)
       });
       if(!response.ok){
         last=new MaintenanceError("STREMIO_HTTP_"+response.status);
@@ -133,7 +133,7 @@ async function datastorePutOnce(env,candidate,deps={}){
     const response=await fetchImpl(`${STREMIO_API}/datastorePut`,{
       method:"POST",headers:{"content-type":"application/json"},
       body:JSON.stringify({collection:"libraryItem",changes:[candidate],authKey:env.STREMIO_AUTHKEY}),
-      redirect:"error",signal:AbortSignal.timeout(15000)
+      redirect:"manual",signal:AbortSignal.timeout(15000)
     });
     if(!response.ok)return {kind:"http",status:response.status,transient:transientStatus(response.status)};
     const data=await boundedJson(response);

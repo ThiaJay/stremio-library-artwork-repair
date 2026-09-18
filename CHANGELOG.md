@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.2.1 — 2026-09-18
+
+- Corrects the Stremio API redirect policy for the Cloudflare Workers runtime: `redirect: manual` with explicit 3xx rejection instead of Node-only `redirect: error`.
+- Adds a regression test proving Stremio API redirects are not followed.
+- Live remote scheduled-event verification completed against the real Stremio account and internal Poster Safety binding: 1,432 eligible items, 10 scanned, 10 candidates, exactly 2 permitted writes and 2/2 verified.
+- Confirms two encrypted pre-write D1 recovery records were persisted for the verified live writes.
+- Keeps the production cron and hard caps unchanged.
+
 ## 1.2.0 — 2026-09-18
 
 - Makes automatic hosted maintenance the normal operating model instead of manual invocation.

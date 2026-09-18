@@ -1,10 +1,10 @@
 {
   "product": "Library Artwork Repair for Stremio",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "status": "ACTIVE_PUBLIC_HOSTED",
   "classification": "hosted-maintenance",
   "deterministicTests": {
-    "passed": 36,
+    "passed": 37,
     "failed": 0
   },
   "dependencyAudit": {
@@ -16,7 +16,7 @@
   "maxWritesPerRun": 2,
   "publicProtocolSurface": "NONE",
   "hostedWorkerService": "stremio-library-artwork-maintenance",
-  "deployedWorkerVersion": "c0b1c554-5344-4b06-ac81-348fe5cf4525",
+  "deployedWorkerVersion": "9cb788b3-163e-42f4-98bc-f6a14e205eb9",
   "metadataTransport": "internal Poster Safety service binding",
   "backupStore": "D1 encrypted pre-write backups",
   "backupRetentionDays": 14,
@@ -27,5 +27,15 @@
   "localCliRole": "admin/recovery only",
   "crossPlatform": true,
   "identityBoundDecoratedPosters": true,
-  "explicitLibraryIdLimit": 500
+  "explicitLibraryIdLimit": 500,
+  "remoteScheduledProof": {
+    "eligible": 1432,
+    "scanned": 10,
+    "candidates": 10,
+    "attemptedWrites": 2,
+    "verifiedWrites": 2,
+    "stopped": false,
+    "errors": 0,
+    "encryptedBackups": 2
+  }
 }
