@@ -15,6 +15,6 @@
     "hosted-backups": "node scripts/hosted-backups.mjs"
   },
   "devDependencies": {
-    "wrangler": "4.134.0"
+    "wrangler": "4.135.0"
   }
 }
