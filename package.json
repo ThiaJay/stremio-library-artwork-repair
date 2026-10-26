@@ -15,7 +15,7 @@
     "hosted-backups": "node scripts/hosted-backups.mjs"
   },
   "devDependencies": {
-    "wrangler": "4.147.0"
+    "wrangler": "4.152.0"
   },
   "overrides": {
     "sharp": "0.35.5"
